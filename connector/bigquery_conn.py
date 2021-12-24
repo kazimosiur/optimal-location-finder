@@ -2,7 +2,7 @@ import importlib.resources as pkg_resources
 import pandas as pd
 
 from google.cloud import bigquery
-from ml_package import sql_templates
+from connector import sql_templates
 from .gcp_conn import GCPConnection
 
 

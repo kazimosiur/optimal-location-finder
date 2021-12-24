@@ -504,27 +504,27 @@ def select_relevant_kpis(metric_df: pd.DataFrame) -> pd.DataFrame:
              Returns:
                      business_kpis(DataFrame) : KPIs Business is interested in
      """
-    BUSINESS_METRICS = [
+    business_metrics = [
         'customer_penetration_absolute',
-        'customer_penetration %',
-        'overlap %',
+        'customer_penetration%',
+        'overlap%',
         'avg_drive_time',
         'store_level_metrics'
     ]
-    METRICS_TO_LOOK = [
-        'total_customers_list_coverage[pred]',
-        'total_customers_list_coverage[pred] %',
-        'overlap %[pred]',
+    metrics_to_change= [
+        'total_customers_list_coverage',
+        'total_customers_list_coverage%',
+        'overlap%',
         'avg_drive_time',
         'store_level_metrics'
     ]
 
-    rename_columns = dict(zip(METRICS_TO_LOOK, BUSINESS_METRICS))
+    rename_columns = dict(zip(metrics_to_change, business_metrics))
     rename_columns
 
     metric_df.rename(columns=rename_columns, inplace=True)
 
-    business_kpis = metric_df[BUSINESS_METRICS]
+    business_kpis = metric_df[business_metrics]
 
     return business_kpis
 

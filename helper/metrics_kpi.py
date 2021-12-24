@@ -1,6 +1,6 @@
 from helper.utils import *
 import pandas as pd
-from typing import Union
+from typing import Union, Tuple
 
 
 def select_polygons_based_on_input_params(warehouse_polygon_df, input_params):
@@ -74,7 +74,7 @@ def get_all_baseline_metrics(queried_order_info: pd.DataFrame, metrics: list) ->
 
 def generate_constraint_based_info(queried_order_info: pd.DataFrame,
                                    polygons_based_on_driving: pd.DataFrame,
-                                   ) -> Union[pd.DataFrame, pd.DataFrame]:
+                                   ) -> Tuple[pd.DataFrame]:
     """
     Returns locations meeting constraints with weight parameters as nested and unnest format.
 
@@ -97,7 +97,7 @@ def generate_constraint_based_info(queried_order_info: pd.DataFrame,
 
     all_locations = list(map(tuple, queried_order_info[['long', 'lat']].values))
 
-    for pred_code, row in polygons_based_on_driving.iterrows():
+    for pred_code, row in polygons_based_on_driving.iterrows(): #170k
 
         list_of_locations = all_locations.copy()
 
@@ -105,8 +105,8 @@ def generate_constraint_based_info(queried_order_info: pd.DataFrame,
         covered_locations_per_store = get_covered_locations_per_store(covered_polygons_df, queried_order_info,
                                                                       pred_code)
         locations_within_constraints_unnest = locations_within_constraints_unnest.append(covered_locations_per_store)
+    # for
         weight_parameters_in_polygon = get_weighted_features_per_store(covered_locations_per_store, row)
-
         locations_within_constraints_nested = locations_within_constraints_nested.append(weight_parameters_in_polygon)
 
     locations_within_constraints_nested.reset_index(inplace=True)
@@ -164,13 +164,13 @@ def calculate_metrics_at_store_and_network_level(covered_per_actual_store: pd.Da
                                                                                         ).T.to_dict()
         for metric_ in metrics:
             sum_pred = all_locations_for_a_time[metric_].sum()
-            output[f'{metric_}[pred]'] = sum_pred
-            output[f'{metric_}[pred] %'] = sum_pred / baseline_metrics[metric_] * 100
+            output[f'{metric_}'] = sum_pred
+            output[f'{metric_}%'] = sum_pred / baseline_metrics[metric_] * 100
 
         output.update(
             {
 
-                'overlap %[pred]': (sum(locations_matching_constraints[
+                'overlap%': (sum(locations_matching_constraints[
                                             locations_matching_constraints['driving_time'] == driving_time].groupby(
                     ['lat', 'long'])['pred_code'].count() > 1) / baseline_metrics['number_of_locations_covered']) * 100,
 
@@ -180,7 +180,7 @@ def calculate_metrics_at_store_and_network_level(covered_per_actual_store: pd.Da
                                                   'pred_lat' : {row['pred_lat']},\
                                                   'pred_long' : {row['pred_long']},\
                                                   'customer_penetration' : {row['num_customers']},\
-                                                  'customer_penetration %' : {(row['num_customers'] / output['number_of_locations_covered[pred]']) * 100},\
+                                                  'customer_penetration %' : {(row['num_customers'] / output['number_of_locations_covered']) * 100},\
                                                   'overlap coverage %' : {row['overlap coverage %']}\
                                                   " + '}' for _, row in pd.DataFrame(
                     store_level_metrics[driving_time]).T.iterrows()])
@@ -309,7 +309,6 @@ def get_kpi_metrics(warehouse_polygon_df: pd.DataFrame,
     metric_df = update_metrics(metric_df, store_level_new_metrics)
 
     business_kpis = select_relevant_kpis(metric_df)
-
     return business_kpis
 
 
